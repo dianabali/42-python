@@ -1,3 +1,13 @@
+""" 
+    -> None means this function only displays an output and does not return a value.
+
+    Function that returns a value:
+        def add_numbers(a: int, b: int) -> int:
+            return a + b
+        total = add_numbers(5, 3)
+        print(total)    
+"""
+
 def ft_seed_inventory(seed_type: str, quantity: int, unit: str) -> None:
     seed = seed_type.capitalize()
     if unit == "packets":
@@ -8,4 +18,4 @@ def ft_seed_inventory(seed_type: str, quantity: int, unit: str) -> None:
         print(seed, "seeds: covers", quantity, "square meters")
 
 
-# ft_seed_inventory("tomato", 15, "area")
+ft_seed_inventory("tomato", 15, "area")
