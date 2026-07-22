@@ -18,4 +18,4 @@ def ft_seed_inventory(seed_type: str, quantity: int, unit: str) -> None:
         print(seed, "seeds: covers", quantity, "square meters")
 
 
-ft_seed_inventory("tomato", 15, "area")
+# ft_seed_inventory("tomato", 15, "area")
