@@ -1,3 +1,14 @@
+"""
+A setter (set_height()) is a method that lets outside code change the value of a protected attribute but only after validating the new value.
+A getter (get_height()) is a method that returns the value of a protected attribute instead of letting outside code read it.
+
+A protected attirbute is an attribute that cannot be modified / accessed by the outside of the class.
+In Python, a protected attirbute starts with an underscode: _height or _name.
+It is not a real restriction like in Java. It is a convention used to signal the programmer to use getter/setter for this attribute.
+
+A private attribute (name mangling) starts with a double underscode (plant._Plant__name).
+"""
+
 class Plant:
     def __init__(self, name, height=0.0, age=0):
         self._name = name
