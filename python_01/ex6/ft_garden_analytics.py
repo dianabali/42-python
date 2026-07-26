@@ -1,3 +1,33 @@
+"""
+A static method is a method that belongs to the class but doesn't need self or cls to work.
+Used when the logic is related to the class conceptually but doesn't need any particular data to run.
+Example:
+    @staticmethod
+    def is_older_than_year(age):
+        return age > 365
+
+    Plant.is_older_than_year(400)
+    rose.is_older_than_year(400)
+
+
+A class method does need access to the class but not to any specific instance.
+cls refers to whatever class it's called on.
+Since we call it as Plant.create_anonymous(), cls is Plant, so cls(...) is the same as Plant(...). It constructs and returns a new instance.
+It's a common pattern for alternative constructors - ways to build an object that don't fit the normal __init__(self, name, height, age) signature.
+Example:
+    @classmethod
+    def create_anonymous(cls):
+        return cls("Unknown plant", 0.0, 0)
+
+
+A nested class is a class defined inside another class.
+Example:
+    class Plant:
+        class Stats:
+
+    Stats can be accessed as Plant.Stats
+"""
+
 class Plant:
     class Stats:
         def __init__(self):
