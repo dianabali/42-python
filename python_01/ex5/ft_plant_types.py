@@ -1,3 +1,24 @@
+"""
+Inheritance lets one class (subcass) automatically get all the attributes and methods of another class (superclass).
+The subclass can add its own extra stuff or change how some of the parent's behaviour works.
+Example of a superclass and subclass:
+    class Plant
+    class Flower(Plant)
+
+super() - gives you a reference to the parents class so you can call the parent's methods instead of rewriting the code.
+Example:
+    super().__init__(name, height, age)
+
+Method overriding - reuse a method from the parent and add your own stuff to it.
+Example:
+    class Tree(Plant):
+        def show(self):
+            super().show()
+            print(f"Trunk diameter: {self._trunk_diameter}cm")
+"""
+
+
+
 class Plant:
     def __init__(self, name, height=0.0, age=0):
         self._name = name
