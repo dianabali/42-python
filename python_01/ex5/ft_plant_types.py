@@ -128,7 +128,7 @@ def main():
     tomato = Vegetable("Tomato", 5.0, 10, "April", 0)
     tomato.show()
     print("[make tomato grow and age for 20 days]")
-    for _ in range(20):
+    for _ in range(20): # throwaway variable - repeat tomato.grow() and tomato.age() 20 times, and I don't care what the loop counter is.
         tomato.grow()
         tomato.age()
     tomato.show()
