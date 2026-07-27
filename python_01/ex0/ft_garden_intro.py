@@ -1,3 +1,10 @@
+"""
+    if __name__ == "__main__":
+        main()
+
+    "Only run main() if this Python file is being run directly, not if it is imported as a module."
+"""
+
 def main():
     name = "Rose"
     height = 25
