@@ -17,8 +17,6 @@ Example:
             print(f"Trunk diameter: {self._trunk_diameter}cm")
 """
 
-
-
 class Plant:
     def __init__(self, name, height=0.0, age=0):
         self._name = name
