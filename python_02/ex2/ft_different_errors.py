@@ -1,4 +1,4 @@
-def garden_operations(operation_number):
+def garden_operations(operation_number) -> None:
 	if operation_number == 0:
 		int("abc")
 	elif operation_number == 1:
@@ -10,7 +10,7 @@ def garden_operations(operation_number):
 	else:
 		return
 
-def test_error_types():
+def test_error_types() -> None:
 	print("=== Garden Error Tyeps Demo ===")
 
 	for operation_number in range(5):
