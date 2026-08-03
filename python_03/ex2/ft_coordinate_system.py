@@ -1,5 +1,19 @@
-import math
+"""
+Tuples are indexed, ordered, immutable, and allow duplicates.
+Syntax: tuple = ()
+Example:
+    my_tuple = ("hello", "world", "cool stuff")
+    my_tuple = ("hello",)
+    my_tuple = (1, 2, 3, 4, 5)
+    my_tuple = ("hello", 42, False, "yoo")
 
+Tuple constructor: tuple() - used to make a tuple.
+Example:
+    my_tuple = tuple(("hello", "world", 42))
+    
+"""
+
+import math
 
 def get_player_pos() -> tuple[float, float, float]:
     while True:
@@ -22,7 +36,6 @@ def get_player_pos() -> tuple[float, float, float]:
         except ValueError:
             print("Invalid syntax")
 
-
 def calculate_distance(
         point1: tuple[float, float, float],
         point2: tuple[float, float, float]
@@ -32,7 +45,6 @@ def calculate_distance(
             (point2[1] - point1[1]) ** 2 +
             (point2[2] - point1[2]) ** 2
         )
-
 
 print("=== Game Coordinate System ===")
 
