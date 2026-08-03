@@ -1,3 +1,18 @@
+"""
+Dictionaries are indexed, ordreded (Python3.7+), unordered (Python3.6-), changeable, and don't allow duplicates.
+Syntax: my_dic = { key: value }
+Example:
+    my_dict = { 
+        "hello": "world", 
+        "name": "bob", 
+        "age": 20 
+    }
+
+The dict constructor: dict()
+Example:
+    my_dict = dict((name = "bob", age = 20, color = "green"))
+"""
+
 import sys
 
 print("=== Inventory System Analysis ===")
