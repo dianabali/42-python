@@ -1,3 +1,18 @@
+"""
+Sets are unordered, immutable (but you can add/remove), unindexed, and don't allow duplicates.
+Syntax: my_set = {}
+Example:
+    my_set = {"hello", "world", "this is a set", "hello") -> 2nd hello is not printed
+    my_set = {1, 2, 3, 4, 5}
+    my_set = {"hello", 42, True, 1, "yoo"}
+
+NOTE: True = 1 and False = 0. They are treated as duplicates.
+
+The set constructor: set()
+Example:
+    my_set = set(("hello", "world", 42))
+"""
+
 import random
 
 ACHIEVEMENTS = [
