@@ -1,3 +1,16 @@
+"""
+List items are indexed, ordered, changeable, and allow duplicates.
+Synatx: list = []
+Example:
+    my_str_list = ["hello", "world", "cool stuff", "this is a list"]
+    my_int_list = [1, 2, 3, 4, 5]
+    my_whatever_list = ["hello", True, 1, "world", 42]
+
+List constructor: list() - used to make a list.
+Example:
+    my_list = list(("hello", "world", "cool"))
+"""
+
 import sys
 
 print("=== Player Score Analytics ===")
