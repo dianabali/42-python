@@ -39,12 +39,12 @@ def get_player_pos() -> tuple[float, float, float]:
 def calculate_distance(
         point1: tuple[float, float, float],
         point2: tuple[float, float, float]
-    ) -> float:
-        return math.sqrt(
-            (point2[0] - point1[0]) ** 2 +
-            (point2[1] - point1[1]) ** 2 +
-            (point2[2] - point1[2]) ** 2
-        )
+) -> float:
+    return math.sqrt(
+        (point2[0] - point1[0]) ** 2 +
+        (point2[1] - point1[1]) ** 2 +
+        (point2[2] - point1[2]) ** 2
+    )
 
 print("=== Game Coordinate System ===")
 
@@ -55,9 +55,9 @@ first_pos: tuple[float, float, float] = get_player_pos()
 
 print(f"Got a first tuple: {first_pos}")
 print(
-    "It includes: X=" + str(first_pos[0]) +
-    ", Y=", str(first_pos[1]) +
-    ", Z=", str(first_pos[2])
+    f"It includes: X= {str(first_pos[0]}",
+    f", Y= {str(first_pos[1}",
+    f", Z=, {str(first_pos[2]}"
 )
 
 center: tuple[float, float, float] = (0.0, 0.0, 0.0)
