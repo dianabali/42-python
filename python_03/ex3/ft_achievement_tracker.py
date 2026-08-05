@@ -15,7 +15,7 @@ Example:
 
 import random
 
-ACHIEVEMENTS = [
+ACHIEVEMENTS: list[str] = [
     "First Steps",
     "Speed Runner",
     "Master Explorer",
@@ -31,15 +31,15 @@ ACHIEVEMENTS = [
     "Hidden Path Finder"
 ]
 
-def gen_player_achievements():
-    count = random.randint(3, len(ACHIEVEMENTS))
+def gen_player_achievements() -> set[str]:
+    count: int = random.randint(3, len(ACHIEVEMENTS))
     return set(random.sample(ACHIEVEMENTS, count))
 
 print("=== Achievement Tracker System ===")
 
 print()
 
-players = {
+players: dict[str, set[str]] = {
     "Alice": gen_player_achievements(),
     "Bob": gen_player_achievements(),
     "Charlie": gen_player_achievements(),
@@ -53,7 +53,7 @@ for name in players:
 print()
 
 # All distinct achievements
-all_achievements = set()
+all_achievements: set[str] = set()
 for achievements in players.values():
     all_achievements = all_achievements.union(achievements)
 
@@ -62,7 +62,7 @@ print("All distinct achievements:", all_achievements)
 print()
 
 # Common achievements
-common_achievements = None
+common_achievements: set[str] | None = None
 for achievements in players.values():
     if common_achievements is None:
         common_achievements = achievements
@@ -75,17 +75,17 @@ print()
 
 # Unique achievements
 for name in players:
-    others = set()
+    others: set[str] = set()
     for other_name in players:
         if other_name != name:
             others = others.union(players[other_name])
 
-    unique = players[name].difference(others)
+    unique: set[str] = players[name].difference(others)
     print(f"Only {name} has:", unique)
 
 print()
 
 # Missing achievements
 for name in players:
-    missing = set(ACHIEVEMENTS).difference(players[name])
+    missing: set[str] = set(ACHIEVEMENTS).difference(players[name])
     print(f"{name} is missing:", missing)
