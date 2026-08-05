@@ -17,10 +17,10 @@ print("=== Player Score Analytics ===")
 
 scores: list[int] = []
 
-i = 1
+i: int = 1
 while i < len(sys.argv):
     try:
-        score = int(sys.argv[i])
+        score: int = int(sys.argv[i])
         scores = scores + [score]
     except ValueError:
         print("Invalid parameter:", "'" + sys.argv[i] + "'")
