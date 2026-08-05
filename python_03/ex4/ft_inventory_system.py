@@ -17,7 +17,7 @@ import sys
 
 print("=== Inventory System Analysis ===")
 
-inventory = {}
+inventory: dict[str, int] = {}
 
 # Parse arguments
 for arg in sys.argv[1:]:
@@ -25,14 +25,14 @@ for arg in sys.argv[1:]:
         print(f"Error - invalid parameter '{arg}'")
         continue
 
-    parts = arg.split(":")
+    parts: list[str] = arg.split(":")
 
     if len(parts) != 2:
         print(f"Error - invalid parameter '{arg}'")
         continue
 
-    item = parts[0]
-    quantity = parts[1]
+    item: str = parts[0]
+    quantity: str = parts[1]
 
     if item in inventory:
         print(f"Redundant item '{item}' - discarding")
@@ -47,21 +47,21 @@ for arg in sys.argv[1:]:
 print("Got inventory:", inventory)
 
 # List of items
-items = list(inventory.keys())
+items: list[str] = list(inventory.keys())
 print("Item list:", items)
 
 # Total quantity
-total = sum(inventory.values())
+total: int = sum(inventory.values())
 print(f"Total quantity of the {len(items)} items:", total)
 
 # Percentages
 for item in inventory:
-    percentage = round(inventory[item] * 100 / total, 1)
+    percentage: float = round(inventory[item] * 100 / total, 1)
     print(f"Item {item} represents {percentage}%")
 
 # Most abundant
-most_item = None
-most_quantity = None
+most_item: str | None = None
+most_quantity: int | None = None
 
 for item in inventory:
     if most_item is None or inventory[item] > most_quantity:
@@ -71,8 +71,8 @@ for item in inventory:
 print(f"Item most abundant: {most_item} with quantity {most_quantity}")
 
 # Least abundant
-least_item = None
-least_quantity = None
+least_item: str | None = None
+least_quantity: int | None = None
 
 for item in inventory:
     if least_item is None or inventory[item] < least_quantity:
