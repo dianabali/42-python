@@ -1,3 +1,43 @@
+"""
+Stream Management
+
+This program reads text from a file given as a command-line argument,
+displays the original content, transforms each line by adding a '#' character
+to the end, and optionally saves the transformed content to a new file.
+
+Concepts:
+- Command-line arguments: sys.argv is used to receive the input filename.
+- Standard input: sys.stdin.readline() reads the new filename from the user.
+- Standard output: print() displays normal program messages on the screen.
+- Standard error: print(..., file=sys.stderr) sends error messages to the
+  standard error stream instead of normal output.
+- File input: open() with "r" opens a file for reading, and read() retrieves
+  its contents.
+- File output: open() with "w" opens a file for writing, and write() saves
+  the transformed data.
+- Type annotations: IO[str] indicates that the file object handles text
+  data represented by strings.
+- String processing: splitlines() separates the file contents into lines.
+- Loops: a for loop processes every line individually.
+- String concatenation: += builds the transformed text one line at a time.
+- Conditional statements: if/else determines whether the transformed data
+  should be saved.
+- Exception handling: try/except catches OSError when a file operation fails.
+- Resource management: close() explicitly closes files after reading or
+  writing.
+
+Usage:
+    python ft_stream_management.py <file>
+
+The program demonstrates the difference between the three standard streams:
+- stdin -> input received from the user
+- stdout -> normal program output
+- stderr -> error messages
+
+Example:
+    python ft_stream_management.py test_file
+"""
+
 import sys
 from typing import IO
 
@@ -50,6 +90,7 @@ def main() -> None:
             output.close()
 
             print(f"Data saved in file '{new_filename}'.")
+
     except OSError as error:
         print(
             f"[STDERR] Error opening file '{filename}': {error}",
