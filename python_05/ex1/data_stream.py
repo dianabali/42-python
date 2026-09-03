@@ -1,54 +1,72 @@
 """
-Polymorphic processing of a data stream:
+This program is a data-routing system.
+It takes a stream of mixed data and sends
+each item to the first processor that knows
+how to handle it.
 
-This program implements an adaptive data stream processing system.
-The main idea is to receive a list containing different types of data and automatically send each element to a registered processor that knows how to handle it.
+DataProcessor is the common interface that defines
+what every processor should do.
 
-The DataStream class is responsible for managing the registered processors and routing incoming data to the appropriate processor. 
-A processor is selected using polymorphism: Data\stream does not need to know the concrete type of processor. Instead, it asks each processor whether it can process a particular element through the can_process() method.
 """
 
-import typing
-from abc import ABC, abstractmethod 
+from typing import Any
+from abc import ABC, abstractmethod
 
 
 class DataProcessor(ABC):
-    """Abstract class for all data processors"""
-
+    """Can I handle this data?"""
     @abstractmethod
-    def can_process(self, data: typing.Any) -> bool:
+    def can_process(self, data: Any) -> bool:
         pass
 
+    """Ingest the data"""
     @abstractmethod
-    def process(self, data: typing.Any) -> None:
+    def ingest(self, data: Any) -> None:
         pass
 
+    """Output some data"""
     @abstractmethod
     def output(self, count: int) -> None:
         pass
 
+    """Return the processor's name"""
     @abstractmethod
     def get_name(self) -> str:
         pass
 
+    """Return stats"""
     @abstractmethod
-    def get_stats(self) -> typing.Tuple[int, int]:
+    def get_stats(self) -> tuple[int, int]:
         pass
 
 
 class NumericProcessor(DataProcessor):
-    """Processes integers and floats"""
-
     def __init__(self) -> None:
-        self._data: list[typing.Any] = []
+        self._data: list[str] = []
         self._total = 0
 
-    def can_process(self, data: typing.Any) -> bool:
-        return isinstance(data, (int, float)) and not isinstance(data, bool)
+    def can_process(self, data: int | float | list[int | float]) -> bool:
+        if isinstance(data, bool):
+            return False
 
-    def process(self, data: typing.Any) -> None:
-        self._data.append(data)
-        self._total += 1
+        if isinstance(data, (int, float)):
+            return True
+
+        if isinstance(data, list):
+            return all(
+                isinstance(item, (int, float)) and not isinstance(item, bool)
+                for item in data
+            )
+        return False
+
+    def ingest(self, data: int | float | list[int | float]) -> None:
+        if isinstance(data, list):
+            for item in data:
+                self._data.append(str(item))
+                self._total += 1
+        else:
+            self._data.append(str(data))
+            self._total += 1
 
     def output(self, count: int) -> None:
         count = min(count, len(self._data))
@@ -59,23 +77,32 @@ class NumericProcessor(DataProcessor):
     def get_name(self) -> str:
         return "Numeric Processor"
 
-    def get_stats(self) -> typing.Tuple[int, int]:
+    def get_stats(self) -> tuple[int, int]:
         return self._total, len(self._data)
 
 
 class TextProcessor(DataProcessor):
-    """Processes strings"""
-
     def __init__(self) -> None:
         self._data: list[str] = []
         self._total = 0
 
-    def can_process(self, data: typing.Any) -> bool:
-        return isinstance(data, str)
+    def can_process(self, data: str | list[str]) -> bool:
+        if isinstance(data, str):
+            return True
 
-    def process(self, data: typing.Any) -> None:
-        self._data.append(data)
-        self._total += 1
+        if isinstance(data, list):
+            return all(isinstance(item, str) for item in data)
+
+        return False
+
+    def ingest(self, data: str | list[str]) -> None:
+        if isinstance(data, list):
+            for item in data:
+                self._data.append(item)
+                self._total += 1
+        else:
+            self._data.append(data)
+            self._total += 1
 
     def output(self, count: int) -> None:
         count = min(count, len(self._data))
@@ -86,44 +113,63 @@ class TextProcessor(DataProcessor):
     def get_name(self) -> str:
         return "Text Processor"
 
-    def get_stats(self) -> typing.Tuple[int, int]:
+    def get_stats(self) -> tuple[int, int]:
         return self._total, len(self._data)
 
 
 class LogProcessor(DataProcessor):
-    """Processes log dictionaries"""
-
     def __init__(self) -> None:
-        self._data: list[dict[str, typing.Any]] = []
+        self._data: list[str] = []
         self._total = 0
 
-    def can_process(self, data: typing.Any) -> bool:
-        return (
-            isinstance(data, dict)
-            and "log_level" in data
-            and "log_message" in data
-        )
+    def can_process(
+        self,
+        data: dict[str, str] | list[dict[str, str]]
+    ) -> bool:
 
-    def process(self, data: typing.Any) -> None:
-        self._data.append(data)
-        self._total += 1
+        if isinstance(data, dict):
+            return (
+                all(
+                    isinstance(key, str) and isinstance(value, str)
+                    for key, value in data.items()
+                )
+            )
+
+        if isinstance(data, list):
+            return all(
+                isinstance(item, dict)
+                and all(
+                    isinstance(key, str) and isinstance(value, str)
+                    for key, value in item.items()
+                )
+                for item in data
+            )
+
+        return False
+
+    def ingest(
+        self,
+        data: dict[str, str] | list[dict[str, str]]
+    ) -> None:
+
+        if isinstance(data, list):
+            for item in data:
+                self._data.append(str(item))
+                self._total += 1
+        else:
+            self._data.append(str(data))
+            self._total += 1
 
     def output(self, count: int) -> None:
         count = min(count, len(self._data))
 
         for _ in range(count):
-            log = self._data.pop(0)
-            print(
-                "[{}] {}".format(
-                    log["log_level"],
-                    log["log_message"]
-                )
-            )
+            print(self._data.pop(0))
 
     def get_name(self) -> str:
         return "Log Processor"
 
-    def get_stats(self) -> typing.Tuple[int, int]:
+    def get_stats(self) -> tuple[int, int]:
         return self._total, len(self._data)
 
 
@@ -136,13 +182,13 @@ class DataStream:
     def register_processor(self, proc: DataProcessor) -> None:
         self._processors.append(proc)
 
-    def process_stream(self, stream: list[typing.Any]) -> None:
+    def process_stream(self, stream: list[Any]) -> None:
         for element in stream:
             processed = False
 
             for processor in self._processors:
                 if processor.can_process(element):
-                    processor.process(element)
+                    processor.ingest(element)
                     processed = True
                     break
 
@@ -161,13 +207,11 @@ class DataStream:
 
         for processor in self._processors:
             total, remaining = processor.get_stats()
+            name = processor.get_name()
 
             print(
-                "{}: total {} items processed, remaining {} on processor".format(
-                    processor.get_name(),
-                    total,
-                    remaining
-                )
+                f"{name}: total {total} items processed, "
+                f"remaining {remaining} on processor"
             )
 
 
@@ -181,13 +225,12 @@ def main() -> None:
     data_stream.print_processors_stats()
 
     print()
-    print("Registering Numeric Processor")
-    print()
+    print("=== Registering Numeric Processor ===")
 
     numeric_processor = NumericProcessor()
     data_stream.register_processor(numeric_processor)
 
-    first_batch = [
+    my_data = [
         "Hello world",
         [3.14, -1, 2.71],
         [
@@ -201,16 +244,19 @@ def main() -> None:
             }
         ],
         42,
-        ["Hi", "five"]
+        ["Hi", "five"],
+        True,
+        [1, "some str", 2, 3.5]
     ]
 
-    print("Send first batch of data on stream:", first_batch)
-    data_stream.process_stream(first_batch)
+    print("Send first batch of data on stream:", my_data)
+    data_stream.process_stream(my_data)
 
+    print()
     data_stream.print_processors_stats()
 
     print()
-    print("Registering other data processors")
+    print("=== Registering other data processors ===")
 
     text_processor = TextProcessor()
     log_processor = LogProcessor()
@@ -219,18 +265,20 @@ def main() -> None:
     data_stream.register_processor(log_processor)
 
     print("Send the same batch again")
-    data_stream.process_stream(first_batch)
+    data_stream.process_stream(my_data)
 
+    print()
     data_stream.print_processors_stats()
 
     print()
-    print("Consume some elements from the data processors:")
+    print("=== Consume some elements from the data processors ===")
     print("Numeric 3, Text 2, Log 1")
 
     numeric_processor.output(3)
     text_processor.output(2)
     log_processor.output(1)
 
+    print()
     data_stream.print_processors_stats()
 
 
