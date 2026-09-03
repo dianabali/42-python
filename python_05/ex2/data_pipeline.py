@@ -1,32 +1,41 @@
 """
-Data Pipeline
-
-This program extends the data stream processing system from Exercise 1 into
-a complete data processing pipeline.
-
-The pipeline has two main stages:
-    1. Input processing: 
-    DataStream receives a list containing different types of data and routes
-    each element to the appropriate DataProcessor. Each processor determines
-    whether it can handle an element through its can_process() method.
-
-    2. Output processing: 
-    DataStream can consume processed elements from all registered processors
-    and send them to an export plugin. Export plugins can transform the
-    processed data into different output formats, such as CSV or JSON.
+This program is a data-processing pipeline framework.
+    1. Take data.
+    2. Send each data to the right processor.
+    3. Process it.
+    4. Export the processed data in a CSV/JSON format.
 """
 
-import typing
+
+from typing import Any, Protocol
 from abc import ABC, abstractmethod
+
+
+class ExportPlugin(Protocol):
+    """
+        Any object that want to be used as an export plugin
+        must have a process_output()
+    """
+    def process_output(self, data: list[tuple[int, str]]) -> None:
+        ...
+    """
+        Duck typing:
+            If an object behaves like the thing you need,
+            you can use it like that thing.
+    """
+    """
+        Protocol:
+            Any object that has these methods can be treated as this type
+    """
 
 
 class DataProcessor(ABC):
     @abstractmethod
-    def can_process(self, data: typing.Any) -> bool:
+    def can_process(self, data: Any) -> bool:
         pass
 
     @abstractmethod
-    def process(self, data: typing.Any) -> None:
+    def ingest(self, data: Any) -> None:
         pass
 
     @abstractmethod
@@ -44,25 +53,47 @@ class DataProcessor(ABC):
 
 class NumericProcessor(DataProcessor):
     def __init__(self) -> None:
-        self._data: list[typing.Any] = []
+        self._data: list[str] = []
         self._total = 0
-        self._next_id = 0
+        self._next_id = 1
 
-    def can_process(self, data: typing.Any) -> bool:
-        return isinstance(data, (int, float)) and not isinstance(data, bool)
+    def can_process(
+        self,
+        data: int | float | list[int | float]
+    ) -> bool:
+        if isinstance(data, bool):
+            return False
 
-    def process(self, data: typing.Any) -> None:
-        self._data.append(data)
-        self._total += 1
+        if isinstance(data, (int, float)):
+            return True
+
+        if isinstance(data, list):
+            return all(
+                isinstance(item, (int, float))
+                and not isinstance(item, bool)
+                for item in data
+            )
+
+        return False
+
+    def ingest(
+        self,
+        data: int | float | list[int | float]
+    ) -> None:
+        if isinstance(data, list):
+            for item in data:
+                self._data.append(str(item))
+                self._total += 1
+        else:
+            self._data.append(str(data))
+            self._total += 1
 
     def output(self, count: int) -> list[tuple[int, str]]:
-        result = []
-
         count = min(count, len(self._data))
+        result: list[tuple[int, str]] = []
 
         for _ in range(count):
-            data = self._data.pop(0)
-            result.append((self._next_id, str(data)))
+            result.append((self._next_id, self._data.pop(0)))
             self._next_id += 1
 
         return result
@@ -78,23 +109,32 @@ class TextProcessor(DataProcessor):
     def __init__(self) -> None:
         self._data: list[str] = []
         self._total = 0
-        self._next_id = 0
+        self._next_id = 1
 
-    def can_process(self, data: typing.Any) -> bool:
-        return isinstance(data, str)
+    def can_process(self, data: str | list[str]) -> bool:
+        if isinstance(data, str):
+            return True
 
-    def process(self, data: typing.Any) -> None:
-        self._data.append(data)
-        self._total += 1
+        if isinstance(data, list):
+            return all(isinstance(item, str) for item in data)
+
+        return False
+
+    def ingest(self, data: str | list[str]) -> None:
+        if isinstance(data, list):
+            for item in data:
+                self._data.append(item)
+                self._total += 1
+        else:
+            self._data.append(data)
+            self._total += 1
 
     def output(self, count: int) -> list[tuple[int, str]]:
-        result = []
-
         count = min(count, len(self._data))
+        result: list[tuple[int, str]] = []
 
         for _ in range(count):
-            data = self._data.pop(0)
-            result.append((self._next_id, str(data)))
+            result.append((self._next_id, self._data.pop(0)))
             self._next_id += 1
 
         return result
@@ -108,35 +148,56 @@ class TextProcessor(DataProcessor):
 
 class LogProcessor(DataProcessor):
     def __init__(self) -> None:
-        self._data: list[dict[str, typing.Any]] = []
+        self._data: list[str] = []
         self._total = 0
-        self._next_id = 0
+        self._next_id = 1
 
-    def can_process(self, data: typing.Any) -> bool:
-        return (
-            isinstance(data, dict)
-            and "log_level" in data
-            and "log_message" in data
-        )
-
-    def process(self, data: typing.Any) -> None:
-        self._data.append(data)
-        self._total += 1
-
-    def output(self, count: int) -> list[tuple[int, str]]:
-        result = []
-
-        count = min(count, len(self._data))
-
-        for _ in range(count):
-            data = self._data.pop(0)
-
-            value = "{}: {}".format(
-                data["log_level"],
-                data["log_message"]
+    def can_process(
+        self,
+        data: dict[str, str] | list[dict[str, str]]
+    ) -> bool:
+        if isinstance(data, dict):
+            return all(
+                isinstance(key, str) and isinstance(value, str)
+                for key, value in data.items()
             )
 
-            result.append((self._next_id, value))
+        if isinstance(data, list):
+            return all(
+                isinstance(item, dict)
+                and all(
+                    isinstance(key, str) and isinstance(value, str)
+                    for key, value in item.items()
+                )
+                for item in data
+            )
+
+        return False
+
+    def ingest(
+        self,
+        data: dict[str, str] | list[dict[str, str]]
+    ) -> None:
+        if isinstance(data, list):
+            for item in data:
+                self._data.append(
+                    f"{item.get('log_level')}: "
+                    f"{item.get('log_message')}"
+                )
+                self._total += 1
+        else:
+            self._data.append(
+                f"{data.get('log_level')}: "
+                f"{data.get('log_message')}"
+            )
+            self._total += 1
+
+    def output(self, count: int) -> list[tuple[int, str]]:
+        count = min(count, len(self._data))
+        result: list[tuple[int, str]] = []
+
+        for _ in range(count):
+            result.append((self._next_id, self._data.pop(0)))
             self._next_id += 1
 
         return result
@@ -148,63 +209,54 @@ class LogProcessor(DataProcessor):
         return self._total, len(self._data)
 
 
-class ExportPlugin(typing.Protocol):
-    def process_output(
-        self,
-        data: list[tuple[int, str]]
-    ) -> None:
-        ...
-
-
 class CSVExportPlugin:
-    """Export plugin that outputs data as CSV"""
-
-    def process_output(
-        self,
-        data: list[tuple[int, str]]
-    ) -> None:
-        values = []
-
-        for _, value in data:
-            values.append(value)
-
-        print("CSV Output: " + ",".join(values))
+    """
+        CSV - comma-separated values
+        (simple text format for tabular data)
+    """
+    def process_output(self, data: list[tuple[int, str]]) -> None:
+        values = [value for _, value in data]
+        print("CSV Output:")
+        print(",".join(values))
 
 
 class JSONExportPlugin:
-    """Export plugin that outputs data as JSON"""
-
-    def process_output(
-        self,
-        data: list[tuple[int, str]]
-    ) -> None:
-        items = []
+    """
+        JSON - JavaScript Object Notation
+        (structured text format used to exchange data between programs)
+    """
+    def process_output(self, data: list[tuple[int, str]]) -> None:
+        result: list[str] = []
 
         for item_id, value in data:
-            items.append(
-                '"item_{}": "{}"'.format(
-                    item_id,
-                    value.replace('"', '\\"')
-                )
+            escaped_value = value.replace("\\", "\\\\")
+            escaped_value = escaped_value.replace('"', '\\"')
+            escaped_value = escaped_value.replace("\n", "\\n")
+
+            result.append(
+                f'"item_{item_id}": "{escaped_value}"'
             )
 
-        print("JSON Output: {" + ", ".join(items) + "}")
+        print("JSON Output:")
+        print("{" + ", ".join(result) + "}")
 
 
 class DataStream:
+    """Routes stream elements to the appropriate data processor."""
+
     def __init__(self) -> None:
         self._processors: list[DataProcessor] = []
 
     def register_processor(self, proc: DataProcessor) -> None:
         self._processors.append(proc)
 
-    def process_stream(self, stream: list[typing.Any]) -> None:
+    def process_stream(self, stream: list[Any]) -> None:
         for element in stream:
             processed = False
 
             for processor in self._processors:
                 if processor.can_process(element):
-                    processor.process(element)
+                    processor.ingest(element)
                     processed = True
                     break
 
@@ -221,7 +273,9 @@ class DataStream:
     ) -> None:
         for processor in self._processors:
             data = processor.output(nb)
-            plugin.process_output(data)
+
+            if data:
+                plugin.process_output(data)
 
     def print_processors_stats(self) -> None:
         print("== DataStream statistics ==")
@@ -232,13 +286,11 @@ class DataStream:
 
         for processor in self._processors:
             total, remaining = processor.get_stats()
+            name = processor.get_name()
 
             print(
-                "{}: total {} items processed, remaining {} on processor".format(
-                    processor.get_name(),
-                    total,
-                    remaining
-                )
+                f"{name}: total {total} items processed, "
+                f"remaining {remaining} on processor"
             )
 
 
@@ -249,9 +301,11 @@ def main() -> None:
     print()
 
     data_stream = DataStream()
+
     data_stream.print_processors_stats()
 
-    print("Registering Processors")
+    print()
+    print("=== Registering Processors ===")
 
     numeric_processor = NumericProcessor()
     text_processor = TextProcessor()
@@ -261,7 +315,7 @@ def main() -> None:
     data_stream.register_processor(text_processor)
     data_stream.register_processor(log_processor)
 
-    first_batch = [
+    my_data = [
         "Hello world",
         [3.14, -1, 2.71],
         [
@@ -278,21 +332,22 @@ def main() -> None:
         ["Hi", "five"]
     ]
 
-    print("Send first batch of data on stream:", first_batch)
-    data_stream.process_stream(first_batch)
+    print("Send first batch of data on stream:", my_data)
+    data_stream.process_stream(my_data)
 
+    print()
     data_stream.print_processors_stats()
 
-    print(
-        "Send 3 processed data from each processor to a CSV plugin:"
-    )
+    print()
+    print("=== Send 3 processed data from each processor to a CSV plugin ===")
 
     csv_plugin = CSVExportPlugin()
     data_stream.output_pipeline(3, csv_plugin)
 
+    print()
     data_stream.print_processors_stats()
 
-    second_batch = [
+    my_data2 = [
         21,
         ["I love AI", "LLMs are wonderful", "Stay healthy"],
         [
@@ -309,18 +364,20 @@ def main() -> None:
         "World hello"
     ]
 
-    print("Send another batch of data:", second_batch)
-    data_stream.process_stream(second_batch)
+    print()
+    print("Send another batch of data:", my_data2)
+    data_stream.process_stream(my_data2)
 
+    print()
     data_stream.print_processors_stats()
 
-    print(
-        "Send 5 processed data from each processor to a JSON plugin:"
-    )
+    print()
+    print("=== Send 5 processed data from each processor to a JSON plugin ===")
 
     json_plugin = JSONExportPlugin()
     data_stream.output_pipeline(5, json_plugin)
 
+    print()
     data_stream.print_processors_stats()
 
 
