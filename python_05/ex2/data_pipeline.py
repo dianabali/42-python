@@ -35,6 +35,10 @@ class DataProcessor(ABC):
         pass
 
     @abstractmethod
+    def validate(self, data: Any) -> bool:
+        pass
+
+    @abstractmethod
     def ingest(self, data: Any) -> None:
         pass
 
@@ -76,10 +80,19 @@ class NumericProcessor(DataProcessor):
 
         return False
 
+    def validate(
+        self,
+        data: int | float | list[int | float]
+    ) -> bool:
+        return self.can_process(data)
+
     def ingest(
         self,
         data: int | float | list[int | float]
     ) -> None:
+        if not self.validate(data):
+            raise ValueError("Improper numeric data")
+
         if isinstance(data, list):
             for item in data:
                 self._data.append(str(item))
@@ -120,7 +133,13 @@ class TextProcessor(DataProcessor):
 
         return False
 
+    def validate(self, data: str | list[str]) -> bool:
+        return self.can_process(data)
+
     def ingest(self, data: str | list[str]) -> None:
+        if not self.validate(data):
+            raise ValueError("Improper text data")
+
         if isinstance(data, list):
             for item in data:
                 self._data.append(item)
@@ -174,10 +193,19 @@ class LogProcessor(DataProcessor):
 
         return False
 
+    def validate(
+        self,
+        data: dict[str, str] | list[dict[str, str]]
+    ) -> bool:
+        return self.can_process(data)
+
     def ingest(
         self,
         data: dict[str, str] | list[dict[str, str]]
     ) -> None:
+        if not self.validate(data):
+            raise ValueError("Improper log data")
+
         if isinstance(data, list):
             for item in data:
                 self._data.append(
@@ -383,3 +411,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    
