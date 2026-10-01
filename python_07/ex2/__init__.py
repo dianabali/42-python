@@ -8,8 +8,8 @@ from .strategy import (
 
 __all__ = [
     "BattleStrategy",
-    "NormalStrategy"
-    "AggressiveStrategy"
-    "DefensiveStrategy"
+    "NormalStrategy",
+    "AggressiveStrategy",
+    "DefensiveStrategy",
     "InvalidStrategyError"
 ]
