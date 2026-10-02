@@ -4,7 +4,8 @@ from ex1 import HealCapability, TransformCapability
 
 
 class InvalidStrategyError(Exception):
-    """When act() is called"""
+    """Raised when act()"""
+
 
 class BattleStrategy(ABC):
     """Abstract class for how Creature behaves in fights"""
@@ -25,7 +26,8 @@ class BattleStrategy(ABC):
         """Helper for act()"""
         if not self.is_valid(creature):
             raise InvalidStrategyError(
-                f"Invalid Creature '{creature.name} for this {self.name} strategy"
+                f"Invalid Creature '{creature.name}'"
+                f" for this {self.name} strategy"
             )
 
 
@@ -52,6 +54,7 @@ class AggressiveStrategy(BattleStrategy):
 
     def act(self, creature: Creature) -> None:
         self._ensure_valid(creature)
+        assert isinstance(creature, TransformCapability)
         print(creature.transform())
         print(creature.attack())
         print(creature.revert())
@@ -67,5 +70,6 @@ class DefensiveStrategy(BattleStrategy):
 
     def act(self, creature: Creature) -> None:
         self._ensure_valid(creature)
+        assert isinstance(creature, HealCapability)
         print(creature.attack())
         print(creature.heal())
