@@ -4,11 +4,11 @@ from pydantic import BaseModel, Field, ValidationError
 
 
 class SpaceStation(BaseModel):
-    station_id: str = Field(..., min_length=3, max_length=10)
-    name: str = Field(..., min_length=1, max_length=50)
-    crew_size: int = Field(..., ge=1, le=20)
-    power_level: float = Field(..., ge=0.0, le=100.0)
-    oxygen_level: float = Field(..., ge=0.0, le=100.0)
+    station_id: str = Field(min_length=3, max_length=10)
+    name: str = Field(min_length=1, max_length=50)
+    crew_size: int = Field(ge=1, le=20)
+    power_level: float = Field(ge=0.0, le=100.0)
+    oxygen_level: float = Field(ge=0.0, le=100.0)
     last_maintenance: datetime
     is_operational: bool = True
     notes: Optional[str] = Field(default=None, max_length=200)
@@ -19,15 +19,21 @@ def main() -> None:
     print("=" * 40)
 
     # Valid station
-    station = SpaceStation(
-        station_id="Gru",
-        name="Minion Army",
-        crew_size=6,
-        power_level=85.5,
-        oxygen_level=92.3,
-        last_maintenance=datetime(2026, 10, 15, 20, 42),
-        notes="Minions, tonight, we steal... da moon!!"
-    )
+    try:
+        station = SpaceStation(
+            station_id="BANANA-01",
+            name="Minion Army",
+            crew_size=6,
+            power_level=85.5,
+            oxygen_level=92.3,
+            last_maintenance=datetime.now(),
+            notes="Minions, tonight, we steal... DA MOON!!"
+        )
+    except ValidationError as errors:
+        print("Expected validation error:")
+        for error in errors.errors():
+            field = error["loc"][0]
+            print(f"{field}: {error['msg']}")
 
     print("Valid station created:")
     print(f"ID: {station.station_id}")
@@ -35,12 +41,13 @@ def main() -> None:
     print(f"Crew: {station.crew_size} minions")
     print(f"Power: {station.power_level}%")
     print(f"Oxygen: {station.oxygen_level}%")
+    print(f"Last maintenance: {station.last_maintenance}")
     print(f"Status: {'Operational' if station.is_operational else 'Offline'}")
     print(f"Notes: {station.notes}")
 
     print("=" * 40)
 
-    # Invalid station (crew_size > 20)
+    # Invalid station
     try:
         SpaceStation(
             station_id="42_STATION",
@@ -50,9 +57,9 @@ def main() -> None:
             oxygen_level=200.0,
             last_maintenance=datetime.now(),
         )
-    except ValidationError as errorssss:
+    except ValidationError as errors:
         print("Expected validation error:")
-        for error in errorssss.errors():
+        for error in errors.errors():
             field = error["loc"][0]
             print(f"{field}: {error['msg']}")
 
