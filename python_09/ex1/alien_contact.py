@@ -72,26 +72,28 @@ def try_report(
     except ValidationError as errorsss:
         print("Expected validation error:")
         print(errorsss.errors()[0]["msg"].removeprefix("Value error, "))
-        print("-" * 38)
+        print("-" * 40)
 
 
 def main() -> None:
     print("Alien Contact Log Validation")
-    print("=" * 38)
+    print("=" * 40)
 
+    # Valid contact
     contact = AlienContact(
-        contact_id="AC_2024_001",
+        contact_id="AC_GRU_001",
         timestamp=datetime.now(),
-        location="Area 51, Nevada",
+        location="Gru's Basement Lab",
         contact_type=ContactType.RADIO,
         signal_strength=8.5,
         duration_minutes=45,
         witness_count=5,
-        message_received="Greetings from Zeta Reticuli",
+        message_received="Delivery of 10'000 bananas inbound.",
     )
 
     print("Valid contact report:")
     print(f"ID: {contact.contact_id}")
+    print(f"Timestamp: {contact.timestamp}")
     print(f"Type: {contact.contact_type.value}")
     print(f"Location: {contact.location}")
     print(f"Signal: {contact.signal_strength}/10")
@@ -99,8 +101,9 @@ def main() -> None:
     print(f"Witnesses: {contact.witness_count}")
     print(f"Message: '{contact.message_received}'")
 
-    print("=" * 38)
+    print("=" * 40)
 
+    # Invalid contacts
     try_report("AC_2026_001", ContactType.TELEPATHIC, 5.0, 1)
     try_report("AC_2026_002", ContactType.PHYSICAL, 5.0, 4, is_verified=False)
     try_report("42_2026_003", ContactType.VISUAL, 5.0, 4)
