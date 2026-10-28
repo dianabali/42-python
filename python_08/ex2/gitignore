@@ -1,0 +1,14 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Virtual environments
+matrix_env/
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
