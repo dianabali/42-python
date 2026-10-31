@@ -26,35 +26,36 @@ def show_install_help() -> None:
     print("\nSome packages are missing. Install them with pip:")
     print("    pip install -r requirements.txt")
     print("\nOr with Poetry:")
+    print("    pip install poetry")
     print("    poetry install")
     print("    poetry run python loading.py")
 
 
 def analyze_data() -> None:
-    import numpy as np
-    import pandas as pd
+    import numpy as n
+    import pandas as p
     import matplotlib
     matplotlib.use("Agg")  # to save images without opening a window
-    import matplotlib.pyplot as plt
+    import matplotlib.pyplot as m
 
     print("\nAnalyzing Matrix data...")
 
     # Make 1000 random numbers
-    values = np.random.normal(0, 1, 1000)
+    values = n.random.normal(0, 1, 1000)
     print(f"Processing {len(values)} data points...")
 
     # Put them in a table and calculate a rolling average
-    data = pd.DataFrame({"signal": values})
+    data = p.DataFrame({"signal": values})
     data["rolling_mean"] = data["signal"].rolling(window=10).mean()
 
     # Draw and save the chart
     print("Generating visualization...")
-    plt.plot(data["signal"], label="signal")
-    plt.plot(data["rolling_mean"], label="rolling mean")
-    plt.legend()
-    plt.title("Matrix Data Analysis")
-    plt.savefig("matrix_analysis.png")
-    plt.close()
+    m.plot(data["signal"], label="signal")
+    m.plot(data["rolling_mean"], label="rolling mean")
+    m.legend()
+    m.title("Matrix Data Analysis")
+    m.savefig("matrix_analysis.png")
+    m.close()
 
     print("\nAnalysis complete!")
     print("Results saved to: matrix_analysis.png")
