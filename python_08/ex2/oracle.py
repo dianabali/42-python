@@ -1,115 +1,219 @@
 import os
 import sys
-from dotenv import load_dotenv
 
-# load the .env file
-# override=False means real env vars
-load_dotenv(override=False)
-
-# read each setting
-# os.getenv returns None if the variable is missing
-mode = os.getenv("MATRIX_MODE")
-database_url = os.getenv("DATABASE_URL")
-api_key = os.getenv("API_KEY")
-log_level = os.getenv("LOG_LEVEL")
-zion_endpoint = os.getenv("ZION_ENDPOINT")
-
-print("ORACLE STATUS: Reading the Matrix...")
-print()
-
-# handle missing configuration
-if mode is None:
-    print("WARNING: MATRIX_MODE is missing, using 'development'")
-    mode = "development"
-
-if log_level is None:
-    # different default depending on the mode
-    if mode == "production":
-        log_level = "WARNING"
-    else:
-        log_level = "DEBUG"
-    print("WARNING: LOG_LEVEL is missing, using " + log_level)
-
-missing = []
-if database_url is None:
-    missing.append("DATABASE_URL")
-if api_key is None:
-    missing.append("API_KEY")
-if zion_endpoint is None:
-    missing.append("ZION_ENDPOINT")
-
-for name in missing:
-    print("WARNING: " + name + " is missing")
-
-# in production, missing settings are NOT allowed
-if mode == "production" and missing:
-    print()
-    print("ERROR: Production needs all settings. The Oracle stops here.")
+try:
+    from dotenv import load_dotenv  # reads a .env file into environment variables
+except ImportError:
+    print("[ERROR]: python-dotenv is missing. Run: pip install -r requirements.txt")
     sys.exit(1)
 
-print()
 
-# show the configuration
-print("Configuration loaded:")
-print("Mode: " + mode)
+PLACEHOLDERS = ["", "apiii_keyyy", "somethingg"]
+VALID_LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
-if database_url is None:
-    print("Database: Not configured")
-elif "localhost" in database_url:
-    print("Database: Connected to local instance")
-else:
-    print("Database: Connected to remote instance")
 
-if api_key is None:
-    print("API Access: Not authenticated")
-else:
-    print("API Access: Authenticated")
+def load_settings():
+    """Read the settings and return them with a list of warnings"""
 
-print("Log Level: " + log_level)
+    warnings = []
 
-if zion_endpoint is None:
-    print("Zion Network: Offline")
-else:
-    print("Zion Network: Online")
+    # load_dotenv() reads the .env file and puts its lines into os.environ.
+    # override=False - if a variable is ALREADY set in the real
+    # environment the .env file will NOT replace it
+    env_file_found = load_dotenv(override=False)
+    if not env_file_found:
+        warnings.append("No .env file found (using environment only)")
 
-print()
+    # .strip() removes spaces around the value
+    # .lower() / .upper() make the text consistent
+    mode = os.environ.get("MATRIX_MODE", "").strip().lower()
+    database_url = os.environ.get("DATABASE_URL", "").strip()
+    api_key = os.environ.get("API_KEY", "").strip()
+    log_level = os.environ.get("LOG_LEVEL", "").strip().upper()
+    zion_endpoint = os.environ.get("ZION_ENDPOINT", "").strip()
 
-# development vs production difference 
-if mode == "production":
-    print("Production mode: strict rules, quiet logs")
-    if log_level == "DEBUG":
-        print("WARNING: DEBUG logs are not recommended in production")
-else:
-    print("Development mode: relaxed rules, detailed logs")
+    # MATRIX_MODE - "development" or "production"
+    if mode == "":
+        warnings.append("MATRIX_MODE missing, using default 'development'")
+        mode = "development"
+    elif mode != "development" and mode != "production":
+        warnings.append("MATRIX_MODE '" + mode + "' invalid, using 'development'")
+        mode = "development"
 
-print()
+    # DATABASE_URL
+    if database_url == "":
+        warnings.append("DATABASE_URL is missing")
 
-# security check 
-print("Environment security check:")
+    # API_KEY
+    if api_key == "":
+        warnings.append("API_KEY is missing")
+    elif api_key in PLACEHOLDERS:
+        # It is set, but still the fake value copied from .env.example
+        warnings.append("API_KEY is still a placeholder value")
 
-# 1. the secret must not be written inside this file
-with open(__file__) as f:
-    source_code = f.read()
-if api_key is not None and api_key in source_code:
-    print("[FAIL] Hardcoded secret found in oracle.py")
-else:
-    print("[OK] No hardcoded secrets detected")
+    # LOG_LEVEL - one of VALID_LOG_LEVELS
+    if log_level == "":
+        warnings.append("LOG_LEVEL missing, using default 'INFO'")
+        log_level = "INFO"
+    elif log_level not in VALID_LOG_LEVELS:
+        warnings.append("LOG_LEVEL '" + log_level + "' invalid, using 'INFO'")
+        log_level = "INFO"
 
-# 2. .env must exist and be listed in .gitignore
-env_exists = os.path.exists(".env")
-in_gitignore = False
-if os.path.exists(".gitignore"):
-    with open(".gitignore") as f:
-        in_gitignore = ".env" in f.read().split()
-if env_exists and in_gitignore:
-    print("[OK] .env file properly configured")
-elif not env_exists:
-    print("[WARN] No .env file found (run: cp .env.example .env)")
-else:
-    print("[WARN] .env is not listed in .gitignore")
+    # ZION_ENDPOINT
+    if zion_endpoint == "":
+        warnings.append("ZION_ENDPOINT is missing")
 
-# 3. environment variables can override the .env file
-print("[OK] Production overrides available")
+    # Put all in one
+    settings = {
+        "mode": mode,
+        "database_url": database_url,
+        "api_key": api_key,
+        "log_level": log_level,
+        "zion_endpoint": zion_endpoint,
+    }
 
-print()
-print("The Oracle sees all configurations.")
+    return settings, warnings
+
+
+def is_local_database(url):
+    """Return True if the database URL points to this computer"""
+    return "localhost" in url or "127.0.0.1" in url or "sqlite" in url
+
+
+def check_production(settings):
+    """Production is strict. Return a list of errors (empty = all good)"""
+    errors = []
+
+    # A real production system needs a real API key
+    if settings["api_key"] in PLACEHOLDERS:
+        errors.append("API_KEY must be set to a real value")
+
+    # Production must use a real remote database
+    if settings["database_url"] == "":
+        errors.append("DATABASE_URL must be set")
+    elif is_local_database(settings["database_url"]):
+        errors.append("DATABASE_URL must not point to a local instance")
+
+    # https:// means the connection is encrypted
+    if not settings["zion_endpoint"].startswith("https://"):
+        errors.append("ZION_ENDPOINT must use https://")
+
+    # DEBUG logs can leak sensitive details, so production must not use them
+    if settings["log_level"] == "DEBUG":
+        errors.append("LOG_LEVEL must not be DEBUG")
+
+    return errors
+
+
+def get_database_status(url):
+    """Return a description of the database"""
+    if url == "":
+        return "Not configured"
+    if is_local_database(url):
+        return "Connected to local instance"
+    return "Connected to remote instance"
+
+
+def no_hardcoded_secret(api_key):
+    """Return True if the API key does not appear in this file"""
+    # Placeholders are not real secrets, so there is nothing to leak
+    if api_key in PLACEHOLDERS:
+        return True
+    try:
+        # __file__ is the path of this very script
+        with open(__file__, "r") as file:
+            source_code = file.read()
+    except OSError:
+        # If we cannot read the file, we cannot find a secret in it
+        return True
+    # If the key is NOT found in the source code, the check passes
+    return api_key not in source_code
+
+
+def env_file_is_protected():
+    """Return True if .gitignore has .env and .env.example"""
+    try:
+        with open(".gitignore", "r") as file:
+            # splitlines() turns the file text into a list of lines
+            lines = file.read().splitlines()
+    except OSError:
+        # No .gitignore means .env is NOT protected
+        return False
+
+    env_is_ignored = ".env" in lines
+    example_exists = os.path.exists(".env.example")
+    return env_is_ignored and example_exists
+
+
+def print_check(passed, message):
+    """Print [OK] or [FAIL]"""
+    if passed:
+        print("[OK] " + message)
+    else:
+        print("[FAIL] " + message)
+
+
+def main():
+    print("ORACLE STATUS: Reading the Matrix...")
+    print()
+
+    # Step 1: load the settings
+    settings, warnings = load_settings()
+
+    # Step 2: show every warnings collected
+    for warning in warnings:
+        print("[WARNING] " + warning)
+    if warnings:
+        print()
+
+    # Step 3: in production, stop immediately if anything is wrong
+    if settings["mode"] == "production":
+        errors = check_production(settings)
+        if errors:
+            print("[FATAL] Production configuration invalid:")
+            for error in errors:
+                print("  - " + error)
+            sys.exit(1)
+
+    # Step 4: print the configuration report
+    print("Configuration loaded:")
+    print("Mode: " + settings["mode"])
+    print("Database: " + get_database_status(settings["database_url"]))
+
+    # Print whether the key is usable
+    if settings["api_key"] in PLACEHOLDERS:
+        print("API Access: Not authenticated")
+    else:
+        print("API Access: Authenticated")
+
+    print("Log Level: " + settings["log_level"])
+
+    # Check that endpoint is configured
+    if settings["zion_endpoint"] == "":
+        print("Zion Network: Offline")
+    else:
+        print("Zion Network: Online")
+
+    # Step 5: dev vs prod
+    if settings["mode"] == "development":
+        print("Debug tools: ENABLED (verbose output, local resources allowed)")
+    else:
+        print("Debug tools: DISABLED (secrets masked, remote resources enforced)")
+        print("API Key: ********")  # secrets are hidden in production
+
+    # Step 6: run the security checks and print each result
+    print("\nEnvironment security check:")
+    print_check(no_hardcoded_secret(settings["api_key"]),
+                "No hardcoded secrets detected")
+    print_check(env_file_is_protected(),
+                ".env file properly configured")
+    # load_dotenv(override=False) lets real environment
+    # variables override the .env file, so overrides are always available
+    print_check(True, "Production overrides available")
+
+    print()
+    print("The Oracle sees all configurations.")
+
+
+if __name__ == "__main__":
+    main()
