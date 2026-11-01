@@ -1,23 +1,21 @@
-"""
-A program that detects whether it is running
-inside a Python virtual environment.
-"""
-
 import sys
 import os
-import site
+import site 
+# site - to find the site-packages
+# site-packages - a dir where Python stores installed 
+# 3rd party libraries / packages
 
 
 def in_virtualenv() -> bool:
     """
-    sys.prefix - points to the venv.
-    sys.base_prefix - points to the global env.
+    sys.prefix - the current active env
+    sys.base_prefix - the global env
+
+    Same - global
+    Different - virtual
     """
-    has_real_prefix = hasattr(sys, "real_prefix")
-    has_different_base = (
-        hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix
-    )
-    return has_real_prefix or has_different_base
+
+    return sys.prefix != sys.base_prefix
 
 
 def get_venv_name(venv_path: str) -> str:
@@ -26,11 +24,11 @@ def get_venv_name(venv_path: str) -> str:
 
 
 def get_site_packages_path() -> str | None:
-    """Return the path to the site-packages dir currectly in use"""
+    """Return the path to the site-packages dir in use"""
     try:
-        paths = site.getsitepackages()
-        if paths:
-            return paths[0]
+        pathh = site.getsitepackages()
+        if pathh:
+            return pathh[0]
     except Exception as error:
         print(f"Error accessing the virtual environment: {error}")
     return None
@@ -44,21 +42,21 @@ def print_inside() -> None:
 
     print("MATRIX STATUS: Welcome to the construct")
     print()
-    print("Current Python: {}".format(sys.executable))
-    print("Virtual Environment: {}".format(venv_name))
-    print("Environment path: {}".format(venv_path))
+    print(f"Current Python: {sys.executable}")
+    print(f"Virtual Environment: {venv_name}")
+    print(f"Environment path: {venv_path}")
     print()
     print("SUCCESS: You're in an isolated environment!")
     print("Safe to install packages without affecting the global system.")
     print()
-    print("Package installation path: {}".format(site_packages))
+    print(f"Package installation path: {site_packages}")
 
 
 def print_outside() -> None:
     print()
     print("MATRIX STATUS: You're still plugged in")
     print()
-    print("Current Python: {}".format(sys.executable))
+    print(f"Current Python: {sys.executable}")
     print("Virtual Environment: None detected")
     print()
     print("WARNING: You're in the global environment!")
