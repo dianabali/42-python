@@ -2,7 +2,7 @@ import os
 import sys
 
 try:
-    from dotenv import load_dotenv  # reads a .env file into environment variables
+    from dotenv import load_dotenv
 except ImportError:
     print("[ERROR]: python-dotenv is missing. Run: pip install -r requirements.txt")
     sys.exit(1)
@@ -17,15 +17,12 @@ def load_settings():
 
     warnings = []
 
-    # load_dotenv() reads the .env file and puts its lines into os.environ.
     # override=False - if a variable is ALREADY set in the real
     # environment the .env file will NOT replace it
     env_file_found = load_dotenv(override=False)
     if not env_file_found:
-        warnings.append("No .env file found (using environment only)")
+        warnings.append("No .env file found.")
 
-    # .strip() removes spaces around the value
-    # .lower() / .upper() make the text consistent
     mode = os.environ.get("MATRIX_MODE", "").strip().lower()
     database_url = os.environ.get("DATABASE_URL", "").strip()
     api_key = os.environ.get("API_KEY", "").strip()
@@ -37,18 +34,18 @@ def load_settings():
         warnings.append("MATRIX_MODE missing, using default 'development'")
         mode = "development"
     elif mode != "development" and mode != "production":
-        warnings.append("MATRIX_MODE '" + mode + "' invalid, using 'development'")
+        warnings.append(f"MATRIX_MODE '{mode}' invalid, using 'development'")
         mode = "development"
 
     # DATABASE_URL
     if database_url == "":
         warnings.append("DATABASE_URL is missing")
 
-    # API_KEY
+    # API_KEY - to access an external service
     if api_key == "":
         warnings.append("API_KEY is missing")
     elif api_key in PLACEHOLDERS:
-        # It is set, but still the fake value copied from .env.example
+        # It is set, but still a fake value
         warnings.append("API_KEY is still a placeholder value")
 
     # LOG_LEVEL - one of VALID_LOG_LEVELS
@@ -56,14 +53,14 @@ def load_settings():
         warnings.append("LOG_LEVEL missing, using default 'INFO'")
         log_level = "INFO"
     elif log_level not in VALID_LOG_LEVELS:
-        warnings.append("LOG_LEVEL '" + log_level + "' invalid, using 'INFO'")
+        warnings.append(f"LOG_LEVEL '{log_level}' invalid, using 'INFO'")
         log_level = "INFO"
 
-    # ZION_ENDPOINT
+    # ZION_ENDPOINT - the address of an external service
     if zion_endpoint == "":
         warnings.append("ZION_ENDPOINT is missing")
 
-    # Put all in one
+    # All in one
     settings = {
         "mode": mode,
         "database_url": database_url,
@@ -81,24 +78,24 @@ def is_local_database(url):
 
 
 def check_production(settings):
-    """Production is strict. Return a list of errors (empty = all good)"""
+    """Production is strict. Return a list of errors"""
     errors = []
 
-    # A real production system needs a real API key
+    # Production needs a real API key
     if settings["api_key"] in PLACEHOLDERS:
         errors.append("API_KEY must be set to a real value")
 
-    # Production must use a real remote database
+    # Production needs a real database
     if settings["database_url"] == "":
         errors.append("DATABASE_URL must be set")
     elif is_local_database(settings["database_url"]):
         errors.append("DATABASE_URL must not point to a local instance")
 
-    # https:// means the connection is encrypted
+    # https:// means encrypted/secure
     if not settings["zion_endpoint"].startswith("https://"):
         errors.append("ZION_ENDPOINT must use https://")
 
-    # DEBUG logs can leak sensitive details, so production must not use them
+    # DEBUG logs can leak sensitive details so production must not use them
     if settings["log_level"] == "DEBUG":
         errors.append("LOG_LEVEL must not be DEBUG")
 
@@ -120,13 +117,11 @@ def no_hardcoded_secret(api_key):
     if api_key in PLACEHOLDERS:
         return True
     try:
-        # __file__ is the path of this very script
+        # __file__ - the path of this file
         with open(__file__, "r") as file:
             source_code = file.read()
     except OSError:
-        # If we cannot read the file, we cannot find a secret in it
         return True
-    # If the key is NOT found in the source code, the check passes
     return api_key not in source_code
 
 
@@ -137,7 +132,6 @@ def env_file_is_protected():
             # splitlines() turns the file text into a list of lines
             lines = file.read().splitlines()
     except OSError:
-        # No .gitignore means .env is NOT protected
         return False
 
     env_is_ignored = ".env" in lines
@@ -148,34 +142,34 @@ def env_file_is_protected():
 def print_check(passed, message):
     """Print [OK] or [FAIL]"""
     if passed:
-        print("[OK] " + message)
+        print(f"[OK] {message}")
     else:
-        print("[FAIL] " + message)
+        print(f"[FAIL] {message}")
 
 
 def main():
     print("ORACLE STATUS: Reading the Matrix...")
     print()
 
-    # Step 1: load the settings
+    # 1. load the settings
     settings, warnings = load_settings()
 
-    # Step 2: show every warnings collected
+    # 2. show warning
     for warning in warnings:
-        print("[WARNING] " + warning)
+        print(f"[WARNING] {warning}")
     if warnings:
         print()
 
-    # Step 3: in production, stop immediately if anything is wrong
+    # 3. in production, stop immediately if anything is wrong
     if settings["mode"] == "production":
         errors = check_production(settings)
         if errors:
-            print("[FATAL] Production configuration invalid:")
+            print("[ACHTUNG!!] Production configuration invalid:")
             for error in errors:
-                print("  - " + error)
+                print(f"  - {error}")
             sys.exit(1)
 
-    # Step 4: print the configuration report
+    # 4. print the configuration report
     print("Configuration loaded:")
     print("Mode: " + settings["mode"])
     print("Database: " + get_database_status(settings["database_url"]))
@@ -194,21 +188,19 @@ def main():
     else:
         print("Zion Network: Online")
 
-    # Step 5: dev vs prod
+    # 5. dev vs prod
     if settings["mode"] == "development":
-        print("Debug tools: ENABLED (verbose output, local resources allowed)")
+        print("Debug tools: ENABLED")
     else:
-        print("Debug tools: DISABLED (secrets masked, remote resources enforced)")
-        print("API Key: ********")  # secrets are hidden in production
+        print("Debug tools: DISABLED")
+        print("API Key: haha you'd wish")
 
-    # Step 6: run the security checks and print each result
+    # 6. run the security checks and print each result
     print("\nEnvironment security check:")
     print_check(no_hardcoded_secret(settings["api_key"]),
                 "No hardcoded secrets detected")
     print_check(env_file_is_protected(),
                 ".env file properly configured")
-    # load_dotenv(override=False) lets real environment
-    # variables override the .env file, so overrides are always available
     print_check(True, "Production overrides available")
 
     print()
