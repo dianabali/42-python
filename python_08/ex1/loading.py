@@ -73,6 +73,15 @@ def analyze_data() -> None:
     print("Results saved to: matrix_analysis.png")
 
 
+def pip_vs_poetry() -> None:
+    print("=== Pip vs. Poetry ===")
+    print("Pip is Python's standard package management tool.")
+    print("It is good for installing single packages.")
+    print("Poetry a dependency and package management tool for Python.")
+    print("Automates package management.")
+    print("Manages the entire project dependencies (installing, versions, venvs).")
+
+
 def main() -> None:
     print("LOADING STATUS: Loading programs...")
     print()
@@ -88,6 +97,7 @@ def main() -> None:
         sys.exit(1)
 
     analyze_data()
+    pip_vs_poetry()
 
 
 if __name__ == "__main__":
